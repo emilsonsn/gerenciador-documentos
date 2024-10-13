@@ -57,7 +57,14 @@
                                 </td>
                                 <td>{{!empty($document->createdBy)?$document->createdBy->name:''}}</td>
                                 <td>{{dateFormat($document->created_at)}}</td>
-                                <td>{{dateFormat($document->created_at)}}</td>
+                                @php
+                                    $expirationDate = \Carbon\Carbon::parse($document->expiration_date);
+                                    $isExpired = $expirationDate->isPast(); // Verifica se a data já passou ou é hoje
+                                @endphp
+
+                                <td style="color: {{ $isExpired ? 'red' : 'inherit' }};">
+                                    {{dateFormat($document->expiration_date)}}
+                                </td>
                                 @if(Gate::check('edit my document') ||  Gate::check('delete my document') ||  Gate::check('show my document'))
                                     <td class="text-right">
                                         <div class="cart-action">

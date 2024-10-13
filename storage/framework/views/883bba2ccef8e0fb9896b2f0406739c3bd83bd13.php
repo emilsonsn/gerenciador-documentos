@@ -13,7 +13,7 @@
 <?php $__env->startSection('content'); ?>
     
     <div class="row">
-        <div class="col-xxl-12 cdx-xxl-50">
+        <div class="col-12">
             <div class="card overall-revenuetbl">
                 <div class="card-header">
                     <h4><?php echo e(__('Document By Category')); ?></h4>
@@ -39,4 +39,4 @@
 
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /home/emilsonsn/Área de trabalho/Emilson/Projetos/Setembro/geradoc-master/main_file/resources/views/dashboard/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /home/emilsonsn/desktop/Emilson/Projetos/Setembro/geradoc-master/main_file/resources/views/dashboard/index.blade.php ENDPATH**/ ?>

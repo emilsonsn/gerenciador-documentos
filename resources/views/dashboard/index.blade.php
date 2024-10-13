@@ -11,7 +11,7 @@
 @endsection
 
 @section('content')
-    <div class="row">
+    {{-- <div class="row">
         <div class="col-xxl-3 col-sm-6 cdx-xxl-50">
             <div class="card sale-revenue">
                 <div class="card-header">
@@ -96,11 +96,9 @@
                 </div>
             </div>
         </div>
-
-
-    </div>
+    </div> --}}
     <div class="row">
-        <div class="col-xxl-12 cdx-xxl-50">
+        <div class="col-12">
             <div class="card overall-revenuetbl">
                 <div class="card-header">
                     <h4>{{__('Document By Category')}}</h4>
@@ -110,7 +108,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xxl-12 cdx-xxl-50">
+        {{-- <div class="col-xxl-12 cdx-xxl-50">
             <div class="card overall-revenuetbl">
                 <div class="card-header">
                     <h4>{{__('Document By Sub Category')}}</h4>
@@ -119,7 +117,7 @@
                     <div id="document_by_subcat"></div>
                 </div>
             </div>
-        </div>
+        </div> --}}
     </div>
 @endsection
 

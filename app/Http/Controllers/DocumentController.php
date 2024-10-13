@@ -9,14 +9,15 @@ use App\Models\DocumentHistory;
 use App\Models\LoggedHistory;
 use App\Models\Reminder;
 use App\Models\shareDocument;
-use App\Models\SubCategory;
 use App\Models\Subscription;
 use App\Models\Tag;
 use App\Models\User;
 use App\Models\VersionHistory;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Validator;
 use Mail;
 
 class DocumentController extends Controller
@@ -24,7 +25,7 @@ class DocumentController extends Controller
 
     public function index()
     {
-        if (\Auth::user()->can('manage document')) {
+        if (Auth::user()->can('manage document')) {
             $documents = Document::where('parent_id', '=', parentId())->get();
             return view('document.index', compact('documents'));
         } else {
@@ -45,13 +46,14 @@ class DocumentController extends Controller
 
     public function store(Request $request)
     {
-        if (\Auth::user()->can('create document') || \Auth::user()->can('create my document')) {
-            $validator = \Validator::make(
+        if (Auth::user()->can('create document') || Auth::user()->can('create my document')) {
+            $validator = Validator::make(
                 $request->all(), [
                 'name' => 'required',
                 'category_id' => 'required',
                 'sub_category_id' => 'required',
                 'document' => 'required',
+                'expiration_date' => 'nullable'
             ]
             );
             if ($validator->fails()) {
@@ -62,11 +64,12 @@ class DocumentController extends Controller
 
             $ids = parentId();
             $authUser = \App\Models\User::find($ids);
-            $totalDocument = $authUser->totalDocument();
+            $totalDocument = $authUser->totalDocument() ?? 0;
             $subscription = Subscription::find($authUser->subscription);
-            if ($totalDocument >= $subscription->total_document && $subscription->total_document != 0) {
-                return redirect()->back()->with('error', __('Your document limit is over, please upgrade your subscription.'));
-            }
+            // $subscriptionTotalDocument = $subscription;
+            // if ($totalDocument >= $subscription->total_document && $subscription->total_document != 0) {
+            //     return redirect()->back()->with('error', __('Your document limit is over, please upgrade your subscription.'));
+            // }
 
             $document = new Document();
             $document->name = $request->name;
@@ -74,8 +77,10 @@ class DocumentController extends Controller
             $document->sub_category_id = $request->sub_category_id;
             $document->description = $request->description;
             $document->tages = !empty($request->tages) ? implode(',', $request->tages) : '';
-            $document->created_by = \Auth::user()->id;
+            $document->created_by = Auth::user()->id;
+            $document->expiration_date = $request->expiration_date ?? Carbon::now()->addYear();
             $document->parent_id = parentId();
+            
             $document->save();
 
             if (!empty($request->document)) {
@@ -93,14 +98,14 @@ class DocumentController extends Controller
                 $version->document = $documentFileName;
                 $version->current_version = 1;
                 $version->document_id = $document->id;
-                $version->created_by = \Auth::user()->id;
+                $version->created_by = Auth::user()->id;
                 $version->parent_id = parentId();
                 $version->save();
             }
 
             $data['document_id'] = $document->id;
             $data['action'] = __('Document Create');
-            $data['description'] = __('New document') . ' ' . $document->name . ' ' . __('created by') . ' ' . \Auth::user()->name;
+            $data['description'] = __('New document') . ' ' . $document->name . ' ' . __('created by') . ' ' . Auth::user()->name;
             DocumentHistory::history($data);
             return redirect()->back()->with('success', __('Document successfully created!'));
 
@@ -131,13 +136,15 @@ class DocumentController extends Controller
 
     public function update(Request $request, Document $document)
     {
-        if (\Auth::user()->can('edit document') || \Auth::user()->can('create my document')) {
-            $validator = \Validator::make(
+        if (Auth::user()->can('edit document') || Auth::user()->can('create my document')) {
+            $validator = Validator::make(
                 $request->all(), [
                 'name' => 'required',
                 'category_id' => 'required',
                 'sub_category_id' => 'required',
+                'expiration_date' => 'nullable'
             ]
+
             );
             if ($validator->fails()) {
                 $messages = $validator->getMessageBag();
@@ -149,12 +156,13 @@ class DocumentController extends Controller
             $document->category_id = $request->category_id;
             $document->sub_category_id = $request->sub_category_id;
             $document->description = $request->description;
+            $document->expiration_date = $request->expiration_date ?? Carbon::now()->addYear();
             $document->tages = !empty($request->tages) ? implode(',', $request->tages) : '';
             $document->save();
 
             $data['document_id'] = $document->id;
             $data['action'] = __('Document Update');
-            $data['description'] = __('Document update') . ' ' . $document->name . ' ' . __('updated by') . ' ' . \Auth::user()->name;
+            $data['description'] = __('Document update') . ' ' . $document->name . ' ' . __('updated by') . ' ' . Auth::user()->name;
             DocumentHistory::history($data);
 
             return redirect()->back()->with('success', __('Document successfully created!'));
@@ -163,15 +171,14 @@ class DocumentController extends Controller
         }
     }
 
-
     public function destroy(Document $document)
     {
-        if (\Auth::user()->can('delete document')) {
+        if (Auth::user()->can('delete document')) {
             $document->delete();
 
             $data['document_id'] = $document->id;
             $data['action'] = __('Document Delete');
-            $data['description'] = __('Document delete') . ' ' . $document->name . ' ' . __('deleted by') . ' ' . \Auth::user()->name;
+            $data['description'] = __('Document delete') . ' ' . $document->name . ' ' . __('deleted by') . ' ' . Auth::user()->name;
             DocumentHistory::history($data);
 
             return redirect()->back()->with('success', 'Document successfully deleted!');
@@ -199,7 +206,7 @@ class DocumentController extends Controller
 
     public function comment($ids)
     {
-        if (\Auth::user()->can('manage comment')) {
+        if (Auth::user()->can('manage comment')) {
             $id = Crypt::decrypt($ids);
             $document = Document::find($id);
             $comments = DocumentComment::where('document_id', $id)->get();
@@ -207,14 +214,12 @@ class DocumentController extends Controller
         } else {
             return redirect()->back()->with('error', __('Permission Denied!'));
         }
-
-
     }
 
     public function commentData(Request $request, $ids)
     {
-        if (\Auth::user()->can('create comment')) {
-            $validator = \Validator::make(
+        if (Auth::user()->can('create comment')) {
+            $validator = Validator::make(
                 $request->all(), [
                     'comment' => 'required',
 
@@ -230,14 +235,14 @@ class DocumentController extends Controller
             $document = Document::find($id);
             $comment = new DocumentComment();
             $comment->comment = $request->comment;
-            $comment->user_id = \Auth::user()->id;
+            $comment->user_id = Auth::user()->id;
             $comment->document_id = $document->id;
             $comment->parent_id = parentId();
             $comment->save();
 
             $data['document_id'] = $document->id;
             $data['action'] = __('Comment Create');
-            $data['description'] = __('Comment create for') . ' ' . $document->name . ' ' . __('commented by') . ' ' . \Auth::user()->name;
+            $data['description'] = __('Comment create for') . ' ' . $document->name . ' ' . __('commented by') . ' ' . Auth::user()->name;
             DocumentHistory::history($data);
 
             return redirect()->back()->with('success', 'Document comment successfully created!');
@@ -248,7 +253,7 @@ class DocumentController extends Controller
 
     public function reminder($ids)
     {
-        if (\Auth::user()->can('manage reminder')) {
+        if (Auth::user()->can('manage reminder')) {
             $id = Crypt::decrypt($ids);
             $document = Document::find($id);
             $reminders = Reminder::where('document_id', $id)->get();
@@ -261,7 +266,7 @@ class DocumentController extends Controller
 
     public function versionHistory($ids)
     {
-        if (\Auth::user()->can('manage version')) {
+        if (Auth::user()->can('manage version')) {
             $id = Crypt::decrypt($ids);
             $document = Document::find($id);
             $versions = VersionHistory::where('document_id', $id)->get();
@@ -274,8 +279,8 @@ class DocumentController extends Controller
 
     public function newVersion(Request $request, $ids)
     {
-        if (\Auth::user()->can('create version')) {
-            $validator = \Validator::make(
+        if (Auth::user()->can('create version')) {
+            $validator = Validator::make(
                 $request->all(), [
                     'document' => 'required',
                 ]
@@ -303,14 +308,14 @@ class DocumentController extends Controller
                 $version->document = $documentFileName;
                 $version->current_version = 1;
                 $version->document_id = $id;
-                $version->created_by = \Auth::user()->id;
+                $version->created_by = Auth::user()->id;
                 $version->parent_id = parentId();
                 $version->save();
             }
             $document = Document::find($id);
             $data['document_id'] = $id;
             $data['action'] = __('New version');
-            $data['description'] = __('Upload new version for') . ' ' . $document->name . ' ' . __('uploaded by') . ' ' . \Auth::user()->name;
+            $data['description'] = __('Upload new version for') . ' ' . $document->name . ' ' . __('uploaded by') . ' ' . Auth::user()->name;
             DocumentHistory::history($data);
 
             return redirect()->back()->with('success', __('New version successfully uploaded!'));
@@ -321,7 +326,7 @@ class DocumentController extends Controller
 
     public function shareDocument($ids)
     {
-        if (\Auth::user()->can('manage share document')) {
+        if (Auth::user()->can('manage share document')) {
             $id = Crypt::decrypt($ids);
             $document = Document::find($id);
             $shareDocuments = shareDocument::where('document_id', $id)->get();
@@ -334,14 +339,14 @@ class DocumentController extends Controller
 
     public function shareDocumentData(Request $request, $ids)
     {
-        if (\Auth::user()->can('create share document')) {
-            $validator = \Validator::make(
+        if (Auth::user()->can('create share document')) {
+            $validator = Validator::make(
                 $request->all(), [
                     'assign_user' => 'required',
                 ]
             );
             if (isset($request->time_duration)) {
-                $validator = \Validator::make(
+                $validator = Validator::make(
                     $request->all(), [
                         'start_date' => 'required',
                         'end_date' => 'required',
@@ -368,7 +373,7 @@ class DocumentController extends Controller
             $document = Document::find($id);
             $data['document_id'] = $id;
             $data['action'] = __('Share document');
-            $data['description'] = __('Share document') . ' ' . $document->name . ' ' . __('shared by') . ' ' . \Auth::user()->name;
+            $data['description'] = __('Share document') . ' ' . $document->name . ' ' . __('shared by') . ' ' . Auth::user()->name;
             DocumentHistory::history($data);
 
             return redirect()->back()->with('success', 'Document successfully assigned!');
@@ -379,7 +384,7 @@ class DocumentController extends Controller
 
     public function shareDocumentDelete($id)
     {
-        if (\Auth::user()->can('delete share document')) {
+        if (Auth::user()->can('delete share document')) {
 
             $shareDoc = shareDocument::find($id);
             $document = Document::find($shareDoc->document_id);
@@ -387,7 +392,7 @@ class DocumentController extends Controller
 
             $data['document_id'] = $id;
             $data['action'] = __('Share document delete');
-            $data['description'] = __('Share document') . ' ' . $document->name . ' ' . __('delete,deleted by') . ' ' . \Auth::user()->name;
+            $data['description'] = __('Share document') . ' ' . $document->name . ' ' . __('delete,deleted by') . ' ' . Auth::user()->name;
             DocumentHistory::history($data);
 
             return redirect()->back()->with('success', 'Assigned document successfully removed!');
@@ -398,7 +403,7 @@ class DocumentController extends Controller
 
     public function sendEmail($ids)
     {
-        if (\Auth::user()->can('manage mail')) {
+        if (Auth::user()->can('manage mail')) {
             $id = Crypt::decrypt($ids);
             $document = Document::find($id);
 
@@ -410,8 +415,8 @@ class DocumentController extends Controller
 
     public function sendEmailData(Request $request, $ids)
     {
-        if (\Auth::user()->can('send mail')) {
-            $validator = \Validator::make(
+        if (Auth::user()->can('send mail')) {
+            $validator = Validator::make(
                 $request->all(), [
                     'email' => 'required',
                     'subject' => 'required',
@@ -443,7 +448,7 @@ class DocumentController extends Controller
             $document = Document::find($id);
             $data['document_id'] = $id;
             $data['action'] = __('Mail send');
-            $data['description'] = __('Mail send for') . ' ' . $document->name . ' ' . __('sended by') . ' ' . \Auth::user()->name;
+            $data['description'] = __('Mail send for') . ' ' . $document->name . ' ' . __('sended by') . ' ' . Auth::user()->name;
             DocumentHistory::history($data);
 
             return redirect()->back()->with('success', 'Mail successfully sent!');
@@ -458,7 +463,7 @@ class DocumentController extends Controller
         $authUser = \App\Models\User::find($ids);
         $subscription = \App\Models\Subscription::find($authUser->subscription);
 
-        if (\Auth::user()->can('manage document history') && $subscription->enabled_document_history == 1) {
+        if (Auth::user()->can('manage document history') && $subscription->enabled_document_history == 1) {
             $histories = DocumentHistory::where('parent_id', parentId())->get();
             return view('document.history', compact('histories'));
         } else {
@@ -472,7 +477,7 @@ class DocumentController extends Controller
         $authUser = \App\Models\User::find($ids);
         $subscription = \App\Models\Subscription::find($authUser->subscription);
 
-        if (\Auth::user()->can('manage logged history') && $subscription->enabled_logged_history == 1) {
+        if (Auth::user()->can('manage logged history') && $subscription->enabled_logged_history == 1) {
             $histories = LoggedHistory::where('parent_id', parentId())->get();
             return view('logged_history.index', compact('histories'));
         } else {
@@ -482,7 +487,7 @@ class DocumentController extends Controller
 
     public function loggedHistoryShow($id)
     {
-        if (\Auth::user()->can('manage logged history')) {
+        if (Auth::user()->can('manage logged history')) {
             $histories = LoggedHistory::find($id);
             return view('logged_history.show', compact('histories'));
         } else {
@@ -492,7 +497,7 @@ class DocumentController extends Controller
 
     public function loggedHistoryDestroy($id)
     {
-        if (\Auth::user()->can('delete logged history')) {
+        if (Auth::user()->can('delete logged history')) {
             $histories = LoggedHistory::find($id);
             $histories->delete();
             return redirect()->back()->with('success', 'Logged history succefully deleted!');

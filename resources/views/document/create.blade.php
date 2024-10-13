@@ -25,6 +25,12 @@
             {{Form::label('tages',__('Tages'),array('class'=>'form-label'))}}
             {{Form::select('tages[]',$tages,null,array('class'=>'form-control hidesearch','multiple'))}}
         </div>
+
+        <div class="form-group col-md-12">
+            {{Form::label('expiration_date',__('Data de validade'),array('class'=>'form-label'))}}
+            {{Form::date('expiration_date', isset($expiration_date) ? $expiration_date : null, array('class'=>'form-control'))}}
+        </div>        
+
         <div class="form-group  col-md-12">
             {{Form::label('description',__('Description'),array('class'=>'form-label'))}}
             {{Form::textarea('description',null,array('class'=>'form-control','rows'=>3))}}

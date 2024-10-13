@@ -221,8 +221,6 @@ Route::group(
     Route::get('logged/{id}/history/show', [DocumentController::class,'loggedHistoryShow'])->name('logged.history.show');
     Route::delete('logged/{id}/history', [DocumentController::class,'loggedHistoryDestroy'])->name('logged.history.destroy');
 
-
-
 });
 
 //-------------------------------Reminder-------------------------------------------

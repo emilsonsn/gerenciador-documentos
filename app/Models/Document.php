@@ -17,6 +17,7 @@ class Document extends Model
         'parent_id',
         'assign_user',
         'created_by',
+        'expiration_date'
     ];
 
     public function category(){

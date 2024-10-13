@@ -1,3 +1,49 @@
-/vendor/srmklive
+# Ignorar arquivos e pastas do ambiente de desenvolvimento
 /.idea
 /.vscode
+
+# Ignore o diretório node_modules (para projetos que utilizam npm/yarn)
+/node_modules
+
+# Ignore o diretório do Composer vendor
+/vendor
+
+# Ignore os arquivos gerados por build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/app/public
+/storage/framework/cache/data
+/storage/logs
+/storage/debugbar
+/bootstrap/cache/*.php
+.phpunit.result.cache
+
+# Arquivos de cache específicos do Laravel
+.env
+.env.backup
+.env.testing
+.env.production
+.env.local
+
+# Ignorar arquivos do PHPUnit
+/phpunit.xml
+/phpunit.xml.dist
+
+# Ignorar caches do Composer
+/composer.lock
+/composer.phar
+
+# Ignorar arquivos de cache e logs
+*.log
+*.cache
+*.lock
+*.env
+*.key
+
+# Ignorar arquivos temporários de upload do sistema
+*_flysystem*
+
+# Ignorar arquivos do sistema operacional
+.DS_Store
+Thumbs.db

@@ -25,8 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('expiration_date', function (Blueprint $table) {
-            $table->dropColumn('validated_at');
+        Schema::table('documents', function (Blueprint $table) {
+            $table->dropColumn('expiration_date');
         });
     }
 };

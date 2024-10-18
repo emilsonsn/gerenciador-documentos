@@ -43,8 +43,15 @@ class WebhookController extends Controller
             Mail::to($user->email)->send(new WelcomeMail($user->name, $user->email, $password));
 
             $files = [
-                "teste 1",
-                'teste 2'
+                "HABILITAÇÃO JURIDICA",
+                'Certidão JUCESP',
+                'Certidão municipal',
+                'Certificado de Registro Cadastral - CRC',
+                'CCMEI',
+                'Atestado de capacitação',
+                'CNDT FGTS',
+                'CNDT',
+                'Inscricao Estadual'
             ];
 
             $category = Category::orderBy('id', 'desc')->first();

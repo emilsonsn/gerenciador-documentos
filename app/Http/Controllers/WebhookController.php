@@ -55,9 +55,11 @@ class WebhookController extends Controller
             ];
 
             $category = Category::orderBy('id', 'desc')->first();
-            $subCategory =SubCategory::orderBy('id', 'desc')->first();
-
+            
             foreach($files as $file){
+                $subCategory =SubCategory::where('title', $file)
+                    ->first();
+
                 Document::create([
                     "name" => $file,
                     "category_id" => $category->id ?? 1,

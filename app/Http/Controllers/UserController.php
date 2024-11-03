@@ -139,6 +139,7 @@ class UserController extends Controller
                     $request->all(), [
                         'name' => 'required',
                         'email' => 'required|email|unique:users,email,' . $id,
+                        'phone_number' => 'nullable|string'
                     ]
                 );
                 if ($validator->fails()) {

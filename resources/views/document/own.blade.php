@@ -59,7 +59,7 @@
                                 <td>{{dateFormat($document->created_at)}}</td>
                                 @php
                                     $expirationDate = \Carbon\Carbon::parse($document->expiration_date);
-                                    $isExpired = $expirationDate->isPast(); // Verifica se a data já passou ou é hoje
+                                    $isExpiringTomorrow = $expirationDate->isTomorrow();
                                 @endphp
 
                                 <td style="color: {{ $isExpired ? 'red' : 'inherit' }};">

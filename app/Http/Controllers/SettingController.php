@@ -61,6 +61,7 @@ class SettingController extends Controller
         $user->first_name = $request->first_name;
         $user->last_name = !empty($request->last_name) ? $request->last_name : null;
         $user->email = $request->email;
+        $user->phone_number = $request->phone_number;
         $user->save();
 
         return redirect()->back()->with('success', 'Account settings successfully updated.');

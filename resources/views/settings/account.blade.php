@@ -47,6 +47,12 @@
                                     {{Form::text('email',null,array('class'=>'form-control','placeholder'=>__('Enter your email'),'required'=>'required'))}}
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{Form::label('phone_number',__('Whatsapp'),array('class'=>'form-label'))}}
+                                    {{Form::text('phone_number',null,array('class'=>'form-control','placeholder'=>__('Digite seu whatsapp'),'required'=>'required'))}}
+                                </div>
+                            </div>
                             <div class="col-md-12">
                                 <div class="form-group">
                                     {{Form::label('profile',__('Profile'),array('class'=>'form-label'))}}

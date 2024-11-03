@@ -78,7 +78,7 @@ class DocumentController extends Controller
             $document->description = $request->description;
             $document->tages = !empty($request->tages) ? implode(',', $request->tages) : '';
             $document->created_by = Auth::user()->id;
-            $document->expiration_date = $request->expiration_date ?? Carbon::now()->addYear();
+            $document->expiration_date = $request->expiration_date ? $request->expiration_date : Carbon::now()->addYear()->format('y-m-d h:i:s');
             $document->parent_id = parentId();
             
             $document->save();

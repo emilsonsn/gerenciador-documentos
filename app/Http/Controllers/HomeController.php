@@ -12,13 +12,14 @@ use App\Models\SubCategory;
 use App\Models\Subscription;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        if (\Auth::check()) {
-            if (\Auth::user()->type == 'super admin') {
+        if (Auth::check()) {
+            if (Auth::user()->type == 'super admin') {
                 $result['totalOrganization'] = User::where('type', 'owner')->count();
                 $result['totalSubscription'] = Subscription::count();
                 $result['totalTransaction'] = PackageTransaction::count();
@@ -38,7 +39,7 @@ class HomeController extends Controller
                 $result['totalReminder'] = Reminder::where('parent_id', parentId())->count();
                 $result['todayReminder'] = Reminder::whereDate('date',Carbon::today())->where('parent_id', parentId())->count();
 
-                $result['totalContact'] = Contact::where('parent_id', \Auth::user()->id)->count();
+                $result['totalContact'] = Contact::where('parent_id', Auth::user()->id)->count();
 
                 $result['documentByCategory'] = $this->documentByCategory();
                 $result['documentBySubCategory'] = $this->documentBySubCategory();
@@ -106,7 +107,6 @@ class HomeController extends Controller
         }
 
         return $payment;
-
     }
 
     public function documentByCategory()
@@ -115,13 +115,17 @@ class HomeController extends Controller
         $documents = [];
         $cat = [];
         foreach ($categories as $category) {
-            $documents[] = Document::where('parent_id',parentId())->where('category_id',$category->id)->count();
+            $documents[] = Document::where('parent_id',parentId())
+                ->where('created_by', Auth::user()->id)
+                ->where('category_id',$category->id)
+                ->count();
             $cat[]=$category->title;
         }
-        $result['data']=$documents;
-        $result['category']=$cat;
+        $result['data'] = $documents;
+        $result['category'] = $cat;
         return $result;
     }
+
     public function documentBySubCategory()
     {
         $categories=SubCategory::where('parent_id',parentId())->get();
